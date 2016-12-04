@@ -12,10 +12,15 @@ triangles = [[int(x) for x in triangle.split()] for triangle in triangles.split(
 
 
 def is_valid_triangle(sides):
-    longest = max(sides)
-    rest = sum(side for side in sides if side != longest)
-    return longest <= rest
+    for i in range(3):
+        new_sides = sides[:]
+        remaining = new_sides.pop(i)
+        if sum(new_sides) <= remaining:
+            return False
+    return True
 
+
+print(is_valid_triangle([3,3,6]))
 
 real_triangles = []
 for one, two, three in zip(*[iter(triangles)]*3):
