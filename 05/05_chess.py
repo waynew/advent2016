@@ -4,6 +4,14 @@ puzzle_in = 'abc'
 password = ['_']*8
 fmt = '{}{}{}{}{}{}{}{}'
 
+def red(letter):
+    return '\x1b[31m'+letter
+
+
+def green(letter):
+    return '\x1b[32m'+letter
+
+
 index = 0
 while password.count('_'):
     md5 = hashlib.md5()
@@ -18,9 +26,12 @@ while password.count('_'):
         except (IndexError, ValueError) as e:
             pass
         else:
-            print(fmt.format(*password), end='\r\a')
+            fake = [red(f) if r == '_' else green(r) for f, r in zip(digest, password)]
+            print('Hacking...', fmt.format(*fake), end='\x1b[0m\r\a')
 
     if not index % 10000:
-        print(fmt.format(*password), index, end='\r')
-    #print(digest, end='\r')
+        fake = [red(f) if r == '_' else green(r) for f, r in zip(digest, password)]
+        print('Hacking...', fmt.format(*fake), end='\x1b[0m\r')
     index += 1
+
+print('Hacked!   ', green(fmt.format(*password)), end='\x1b[0m\n\a')
