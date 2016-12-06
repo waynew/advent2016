@@ -8,4 +8,4 @@ with open('input.txt') as f:
         for i, char in enumerate(line):
             counters[i][char] += 1
 
-print(''.join(c.most_common(1)[0][0] for c in counters))
+print(''.join(c.most_common()[-1][0] for c in counters))
