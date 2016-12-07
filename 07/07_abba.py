@@ -1,28 +1,36 @@
-def is_abba(four):
-    return four.count(four[0]) == 2 and four[:2] == ''.join(reversed(four[2:]))
+import re
+
+def get_abas(text):
+    abas = []
+    for start in range(len(text)-2):
+        segment = text[start:start+3]
+        if segment.count(segment[0]) == 2 and segment == segment[::-1]:
+            abas.append(segment)
+    return abas
 
 
-def has_abba(address):
-    within_brackets = False
-    has_abba = False
-    for start in range(len(address)-4):
-        if address[start] in '[]':
-            within_brackets = not within_brackets
-            continue
+def aba_to_bab(aba):
+    return aba[1]+aba[:-1]
 
-        if is_abba(address[start:start+4]):
-            if within_brackets:
-                return True, True
-            else:
-                has_abba = True
-    return has_abba, within_brackets
+
+def supports_ssl(address):
+    hypernets = re.findall(r'\[(.*?)]', address)
+    for hypernet in hypernets:
+        address = address.replace('[{}]'.format(hypernet), ' ')
+    other_bits = address.split()
+    abas = []
+    for bit in other_bits:
+        abas.extend(get_abas(bit))
+    babs = [aba_to_bab(aba) for aba in abas]
+    for bab in babs:
+        for hypernet in hypernets:
+            if bab in hypernet:
+                return True
+    return False
 
 count = 0
 with open('input.txt') as f:
     for line in f:
-        supports_tls = has_abba(line.rstrip()) == (True, False)
-        if supports_tls:
+        if supports_ssl(line):
             count += 1
-            print(line, end='')
-
-print('Supports TLS:', count)
+print('Supports SSL:', count)
