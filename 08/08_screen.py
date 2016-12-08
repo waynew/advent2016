@@ -1,4 +1,6 @@
-pixels = [list(None for _ in range(50))
+from collections import deque
+
+pixels = [deque(None for _ in range(50))
           for _ in range(6)
           ]
 
@@ -41,8 +43,7 @@ for instruction in instructions:
 
         elif rest.startswith('row'):
             row, amount = (int(val) for val in rest.split('=')[-1].split(' by '))
-            for _ in range(amount):
-                pixels[row] = pixels[row][-1:] + pixels[row][:-1]
+            pixels[row].rotate(amount)
         else:
             assert False, 'Unknown direction '+rest
     else:
