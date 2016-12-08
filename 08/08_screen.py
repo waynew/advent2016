@@ -4,7 +4,7 @@ pixels = [deque(None for _ in range(50))
           for _ in range(6)
           ]
 
-#pixels = [list(None for _ in range(7))
+#pixels = [deque(None for _ in range(7))
 #          for _ in range(3)
 #          ]
 
@@ -17,7 +17,7 @@ with open('input.txt') as f:
 #    'rect 3x2',
 #    'rotate column x=1 by 1',
 #    'rotate row y=0 by 4',
-#    'rotate row x=1 by 1',
+#    'rotate column x=1 by 1',
 #]
 
 def debug(pixels):
@@ -33,13 +33,16 @@ for instruction in instructions:
     elif op == 'rotate':
         if rest.startswith('column'):
             col, amount = (int(val) for val in rest.split('=')[-1].split(' by '))
-            for _ in range(amount):
-                #new_vals = [pixels[(row+1)%len(pixels)][col] for row in range(len(pixels))]
-                new_vals = [pixels[row-1 if row > 0 else len(pixels)-1][col] for row in range(len(pixels))]
-                print(new_vals)
-                for row in range(len(pixels)):
-                    pixels[row][col] = new_vals[row]
-                    print(row, (row+1)%len(pixels), col)
+            pixels = list(deque(z) for z in zip(*pixels[::-1]))
+            pixels[col].rotate(-amount)
+            #for _ in range(amount):
+            #    #new_vals = [pixels[(row+1)%len(pixels)][col] for row in range(len(pixels))]
+            #    new_vals = [pixels[row-1 if row > 0 else len(pixels)-1][col] for row in range(len(pixels))]
+            #    print(new_vals)
+            #    for row in range(len(pixels)):
+            #        pixels[row][col] = new_vals[row]
+            #        print(row, (row+1)%len(pixels), col)
+            pixels = list(reversed(list(deque(z) for z in zip(*pixels))))
 
         elif rest.startswith('row'):
             row, amount = (int(val) for val in rest.split('=')[-1].split(' by '))
