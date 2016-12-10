@@ -10,18 +10,75 @@ value 2 goes to bot 2
 '''.strip().split('\n')
 
 
-Robot = namedtuple('Robot', 'id,instructions,values')
-Give = namedtuple('Give', ('from_id',
-                           'one_chip_type',
-                           'one_output_type',
-                           'one_output_id',
-                           'two_chip_type',
-                           'two_output_type',
-                           'two_output_id',
-                           ))
+class Bin:
+    def __init__(self, bin_id):
+        self.id = bin_id
+        self.values = []
+
+    def receive_chip(self, value):
+        self.values.append(value)
+
+
+class Give:
+    def __init__(self, chip_A_type, chip_A_output, chip_B_type, chip_B_output):
+        if chip_A_type == 'low':
+            self.low_output = chip_A_output
+            self.high_output = chip_B_output
+        else:
+            self.low_output = chip_B_output
+            self.high_output = chip_A_output
+
+    def __repr__(self):
+        return 'Give high to {} {} and low to {} {}'.format(
+            type(self.high_output),
+            self.high_output.id,
+            type(self.low_output),
+            self.low_output.id,
+        )
+
+    def give_high(self, value):
+        self.high_output.receive_chip(value)
+
+    def give_low(self, value):
+        self.low_output.receive_chip(value)
+
+
+class Robot:
+    def __init__(self, robot_id):
+        self.id = robot_id
+        self.instructions = []
+        self.values = []
+
+    def add_instruction(self, instruction):
+        self.instructions.append(instruction)
+
+    def receive_chip(self, value):
+        self.values.append(value)
+        if len(self.values) > 1:
+            self.process_instructions()
+
+    def process_instructions(self):
+        while self.instructions and self.values:
+            instruction = self.instructions.pop(0)
+            print('{} processing {}'.format(self.id, instruction))
+            instruction.give_high(self.high_value)
+            instruction.give_low(self.low_value)
+            self.values.remove(self.high_value)
+            self.values.remove(self.low_value)
+            print(self.values)
+
+    @property
+    def high_value(self):
+        return max(self.values)
+
+    @property
+    def low_value(self):
+        return min(self.values)
+
 
 class RobotFactory:
     robots = {}
+    bins = {}
 
     @classmethod
     def get_robot(cls, robot_id):
@@ -29,6 +86,12 @@ class RobotFactory:
         cls.robots[robot_id] = robot
         return robot
 
+    @classmethod
+    def get_bin(cls, bin_id):
+        output_bin = cls.bins.get(bin_id, Bin(bin_id))
+        cls.bins[bin_id] = output_bin
+        return output_bin
+        
 
 class Output:
     def __init__(self):
@@ -50,65 +113,47 @@ def parse_give_instruction(instruction):
     to_two_chip_type = instruction[8]
     to_two_output_type = instruction[10]
     to_two_output_id = instruction[11]
-    return Give(
-        from_,
+    if to_one_output_type == 'bot':
+        a_output = RobotFactory.get_robot(to_one_output_id)
+    else:
+        a_output = RobotFactory.get_bin(to_one_output_id)
+
+    if to_two_output_type == 'bot':
+        b_output = RobotFactory.get_robot(to_two_output_id)
+    else:
+        b_output = RobotFactory.get_bin(to_two_output_id)
+
+    return from_, Give(
         to_one_chip_type,
-        to_one_output_type,
-        to_one_output_id,
+        a_output,
         to_two_chip_type,
-        to_two_output_type,
-        to_two_output_id,
+        b_output,
     )
 
 
 def process(instructions):
-    robots = {}
-    outputs = defaultdict(Output)
     for instruction in instructions:
-        print(instruction)
         if instruction.startswith('value'):
             val, bot_id = parse_val_instruction(instruction)
-            robot = robots.get(bot_id, Robot(bot_id, [], []))
-            robots[robot.id] = robot
-            robot.values.append(val)
+            robot = RobotFactory.get_robot(bot_id)
+            robot.receive_chip(val)
         elif instruction.startswith('bot'):
-            instruction = parse_give_instruction(instruction)
-            robot = robots.get(instruction.from_id, Robot(bot_id, [], []))
-            robots[instruction.from_id] = robot
-            robot.instructions.append(instruction)
+            robot_id, instruction = parse_give_instruction(instruction)
+            robot = RobotFactory.get_robot(bot_id)
+            robot.add_instruction(instruction)
         else:
             assert False, 'Unknown instruction type '+instruction
 
-        for id in robots:
-            robot = robots[id]
-            print(robot.id)
-            if len(robot.values) > 1:
-                for instruction in robot.instructions:
-                    print(instruction)
-#                if instruction.one_chip_type == 'low':
-#                    if instruction == 'low':
-#                        chip_one = min(robot['values'])
-#                        chip_two = max(robot['values'])
-#                    else:
-#                        chip_two = min(robot['values'])
-#                        chip_one = max(robot['values'])
-#                    robot['values'].remove(chip_one)
-#                    robot['values'].remove(chip_two)
-#
-#                    if instruction[2] == 'bot':
-#                        robots[instruction[3]]['values'].append(chip_one)
-#                    else:
-#                        outputs[instruction[3]]['values'].append(chip_one)
-#
-#                    if instruction[5] == 'bot':
-#                        robots[instruction[3]]['values'].append(chip_two)
-#                    else:
-#                        outputs[instruction[3]]['values'].append(chip_two)
-#
     import pprint; 
-    print('robots: ', pprint.pformat(robots))
-#    print('outputs: ', pprint.pformat(dict(outputs)))
-#    print()
-#
+    print('Robots:')
+    for robot_id in RobotFactory.robots:
+        print('\t',robot_id, RobotFactory.robots[robot_id].values)
+
+    print('Bins:')
+    for bin_id in RobotFactory.bins:
+        print('\t',bin_id, RobotFactory.bins[bin_id].values)
+
+    print('robots: ', pprint.pformat(RobotFactory.robots))
+    print('Output bins: ', pprint.pformat(RobotFactory.bins))
 
 process(instructions)
