@@ -15,6 +15,64 @@ The third floor contains a lithium generator.
 The fourth floor contains nothing relevant.
 '''.strip()
 
+class Elevator:
+    def __init__(self, capacity, floor):
+        self.floor = floor
+        self.capacity = capacity
+        self.items = []
+
+    def go_up(self):
+        if self.floor < 4:
+            self.floor += 1
+        for item in self.items:
+            item.floor = self.floor
+        
+    def go_down(self):
+        if self.floor > 1:
+            self.floor -= 1
+        for item in self.items:
+            item.floor = self.floor
+
+    def embark(self, thing):
+        if len(self.items) < capacity:
+            self.items.append(thing)
+
+    def debark(self):
+        return self.items.pop()
+
+
+class Chip:
+    def __init__(self, type, floor):
+        self.type = type
+        self.gen = None
+        self.floor = floor
+
+    def attach(self, gen):
+        if gen.type == self.type:
+            self.gen = gen
+
+    def detatch(self):
+        self.gen = None
+
+
+class Gen:
+    def __init__(self, type, floor):
+        self.type = type
+        self.chip = None
+        self.floor = floor
+
+    def attach(self, chip):
+        if chip.type == self.type:
+            self.chip = gen
+
+    def detatch(self):
+        self.chip = None
+
+
+class Floors(dict):
+    def add(self, thing):
+        ...
+    
 
 items = {
     'H-C': 1,
