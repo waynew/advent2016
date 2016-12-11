@@ -23,6 +23,19 @@ items = {
     'L-G': 3,
 }
 
+items = {
+    'PL-G': 1,
+    'TH-G': 1,
+    'TH-C': 1,
+    'PR-G': 1,
+    'RU-G': 1,
+    'RU-C': 1,
+    'CO-G': 1,
+    'CO-C': 1,
+    'PL-C': 2,
+    'PR-C': 2,
+}
+
 def floor_to_text(items, floors=4, cur_floor=1):
     text = []
     for floor in range(1, floors+1):
@@ -30,7 +43,7 @@ def floor_to_text(items, floors=4, cur_floor=1):
             elevator = '\x1b[;41m{}\x1b[0m'.format(floor)
         else:
             elevator = floor
-        text.insert(0, '{} {}'.format(elevator, ' '.join(colorize(item, items) if items[item] == floor else ' . ' for item in sorted(items))))
+        text.insert(0, '{} {}'.format(elevator, ' '.join(colorize(item, items) if items[item] == floor else '  . ' for item in sorted(items))))
 
     return '\n'.join(text)
 
@@ -87,6 +100,15 @@ moves = [
     (Hand('L-C', None), -1),
     (Hand('L-C', 'H-C'), 1),
 ]
+
+moves = (
+    (Hand('PL-G', 'PR-G'), 1),
+    (Hand('PL-G', 'PL-C'), 1),
+    (Hand(None, 'PL-G'), -1),
+    (Hand('PR-G', 'PL-G'), 1),
+    (Hand(None, 'PR-G'), -1),
+    (Hand(None, 'PR-G'), -1),
+)
 
 print('\n'*3)
 print('\x1b[3A', end='')
