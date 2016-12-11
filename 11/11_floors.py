@@ -1,5 +1,6 @@
 import time
 from collections import namedtuple
+from functools import lru_cache
 
 data = '''
 The first floor contains a polonium generator, a thulium generator, a thulium-compatible microchip, a promethium generator, a ruthenium generator, a ruthenium-compatible microchip, a cobalt generator, and a cobalt-compatible microchip.
@@ -15,65 +16,7 @@ The third floor contains a lithium generator.
 The fourth floor contains nothing relevant.
 '''.strip()
 
-class Elevator:
-    def __init__(self, capacity, floor):
-        self.floor = floor
-        self.capacity = capacity
-        self.items = []
-
-    def go_up(self):
-        if self.floor < 4:
-            self.floor += 1
-        for item in self.items:
-            item.floor = self.floor
         
-    def go_down(self):
-        if self.floor > 1:
-            self.floor -= 1
-        for item in self.items:
-            item.floor = self.floor
-
-    def embark(self, thing):
-        if len(self.items) < capacity:
-            self.items.append(thing)
-
-    def debark(self):
-        return self.items.pop()
-
-
-class Chip:
-    def __init__(self, type, floor):
-        self.type = type
-        self.gen = None
-        self.floor = floor
-
-    def attach(self, gen):
-        if gen.type == self.type:
-            self.gen = gen
-
-    def detatch(self):
-        self.gen = None
-
-
-class Gen:
-    def __init__(self, type, floor):
-        self.type = type
-        self.chip = None
-        self.floor = floor
-
-    def attach(self, chip):
-        if chip.type == self.type:
-            self.chip = gen
-
-    def detatch(self):
-        self.chip = None
-
-
-class Floors(dict):
-    def add(self, thing):
-        ...
-    
-
 items = {
     'H-C': 1,
     'L-C': 1,
@@ -81,7 +24,7 @@ items = {
     'L-G': 3,
 }
 
-items = {
+target = {
     'PL-G': 1,
     'TH-G': 1,
     'TH-C': 1,
@@ -92,6 +35,19 @@ items = {
     'CO-C': 1,
     'PL-C': 2,
     'PR-C': 2,
+}
+
+items = {
+    'PL-G': 4,
+    'TH-G': 4,
+    'TH-C': 4,
+    'PR-G': 4,
+    'RU-G': 4,
+    'RU-C': 4,
+    'CO-G': 4,
+    'CO-C': 4,
+    'PL-C': 4,
+    'PR-C': 4,
 }
 
 def floor_to_text(items, floors=4, cur_floor=1):
@@ -141,7 +97,7 @@ def fried(items):
 
 
 move_count = 0
-cur_floor = 1
+cur_floor = 4
 
 Hand = namedtuple('Hand', 'left,right')
 
@@ -160,19 +116,46 @@ moves = [
 ]
 
 moves = (
-    (Hand('PL-G', 'PR-G'), 1),
-    (Hand('PL-G', 'PL-C'), 1),
-    (Hand(None, 'PL-G'), -1),
-    (Hand('PR-G', 'PL-G'), 1),
-    (Hand(None, 'PR-G'), -1),
-    (Hand(None, 'PR-G'), -1),
+    (Hand('CO-C', 'PL-C'), -1),
+    (Hand(None  , 'PL-C'), 1),
+    (Hand('PL-C', 'PR-C'), -1),
+    (Hand(None  , 'PL-C'), 1),
+    (Hand('PL-C', 'RU-C'), -1),
+    (Hand(None  , 'PL-C'), 1),
+    (Hand('PL-C', 'TH-C'), -1),
+    (Hand('RU-C', 'TH-C'), -1),
+    (Hand(None  , 'RU-C'), 1),
+    (Hand('RU-C', 'PR-C'), -1),
+    (Hand(None  , 'RU-C'), 1),
+    (Hand('RU-C', 'PL-C'), -1),
+    (Hand(None  , 'RU-C'), 1),
+    (Hand('RU-C', 'CO-C'), -1),
+    (Hand(None  , 'CO-C'), 1),
+    (Hand(None  , 'CO-C'), 1),
+    (Hand('CO-G'  , 'CO-C'), -1),
+    (Hand(None  , 'CO-G'), 1),
+    (Hand('CO-G'  , 'PL-G'), -1),
+    (Hand('CO-G'  , 'CO-C'), 1),
+    (Hand('PR-G'  , 'RU-G'), -1),
+    (Hand(None    , 'RU-G'), 1),
+    (Hand('TH-G'  , 'RU-G'), -1),
+    (Hand(None    , 'RU-G'), 1),
+    (Hand('CO-G'  , 'CO-C'), -1),
+    (Hand(None    , 'CO-C'), -1),
+    (Hand(None    , 'PR-C'), 1),
+    (Hand('PR-G'  , 'PR-C'), 1),
+    (Hand(None    , 'RU-G'), -1),
 )
 
+
+print('Target:')
+print(floor_to_text(target))
+print('\n'+'*'*50)
 print('\n'*3)
 print('\x1b[3A', end='')
-print(floor_to_text(items), end='')
+print(floor_to_text(items, cur_floor=cur_floor), end='')
 for move in moves:
-    time.sleep(0.5)
+    time.sleep(0.1)
     hand, count = move
     cur_floor += count
     if hand.left:
@@ -185,5 +168,6 @@ for move in moves:
     if fried(items):
         print('\nFried!')
         break
-    if all(items[item] == 4 for item in items):
+    if items == target:
         print('\nWon in {} steps!'.format(len(moves)))
+        
