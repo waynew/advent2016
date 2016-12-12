@@ -24,7 +24,7 @@ items = {
     'L-G': 3,
 }
 
-target = {
+items = {
     'PL-G': 1,
     'TH-G': 1,
     'TH-C': 1,
@@ -33,11 +33,11 @@ target = {
     'RU-C': 1,
     'CO-G': 1,
     'CO-C': 1,
-    'PL-C': 2,
-    'PR-C': 2,
+    'PL-C': 1,
+    'PR-C': 1,
 }
 
-items = {
+target = {
     'PL-G': 4,
     'TH-G': 4,
     'TH-C': 4,
@@ -57,7 +57,7 @@ def floor_to_text(items, floors=4, cur_floor=1):
             elevator = '\x1b[;41m{}\x1b[0m'.format(floor)
         else:
             elevator = floor
-        text.insert(0, '{} {}'.format(elevator, ' '.join(colorize(item, items) if items[item] == floor else '  . ' for item in sorted(items))))
+        text.insert(0, '{} {}'.format(elevator, ' '.join(colorize(item, items) if items[item] == floor else '  . ' for item in ['PL-C', 'PL-G', 'PR-C', 'PR-G', 'CO-C', 'CO-G', 'RU-C', 'RU-G', 'TH-C', 'TH-G'])))
 
     return '\n'.join(text)
 
@@ -97,7 +97,7 @@ def fried(items):
 
 
 move_count = 0
-cur_floor = 4
+cur_floor = 1
 
 Hand = namedtuple('Hand', 'left,right')
 
@@ -115,45 +115,51 @@ moves = [
     (Hand('L-C', 'H-C'), 1),
 ]
 
-moves = (
-    (Hand('CO-C', 'PL-C'), -1),
-    (Hand(None  , 'PL-C'), 1),
-    (Hand('PL-C', 'PR-C'), -1),
-    (Hand(None  , 'PL-C'), 1),
-    (Hand('PL-C', 'RU-C'), -1),
-    (Hand(None  , 'PL-C'), 1),
-    (Hand('PL-C', 'TH-C'), -1),
-    (Hand('RU-C', 'TH-C'), -1),
-    (Hand(None  , 'RU-C'), 1),
-    (Hand('RU-C', 'PR-C'), -1),
-    (Hand(None  , 'RU-C'), 1),
-    (Hand('RU-C', 'PL-C'), -1),
-    (Hand(None  , 'RU-C'), 1),
-    (Hand('RU-C', 'CO-C'), -1),
-    (Hand(None  , 'CO-C'), 1),
-    (Hand(None  , 'CO-C'), 1),
-    (Hand('CO-G'  , 'CO-C'), -1),
-    (Hand(None  , 'CO-G'), 1),
-    (Hand('CO-G'  , 'PL-G'), -1),
-    (Hand('CO-G'  , 'CO-C'), 1),
-    (Hand('PR-G'  , 'RU-G'), -1),
-    (Hand(None    , 'RU-G'), 1),
-    (Hand('TH-G'  , 'RU-G'), -1),
-    (Hand(None    , 'RU-G'), 1),
-    (Hand('CO-G'  , 'CO-C'), -1),
-    (Hand(None    , 'CO-C'), -1),
-    (Hand(None    , 'PR-C'), 1),
-    (Hand('PR-G'  , 'PR-C'), 1),
-    (Hand(None    , 'RU-G'), -1),
-)
+moves = [
+]
+
+els = ['PL', 'PR', 'CO', 'TH', 'RU']
+
+
+#moves.append((Hand(els[0]+'-C', els[1]+'-C'), 1))
+#moves.append((Hand(els[0]+'-C', els[1]+'-C'), 1))
+#moves.append((Hand(els[0]+'-C', None), -1))
+#moves.append((Hand(els[0]+'-C', None), -1))
+for el in els[1:]:
+    moves.append((Hand(els[0]+'-C', el+'-C'), 1))
+    moves.append((Hand(els[0]+'-C', el+'-C'), 1))
+    moves.append((Hand(els[0]+'-C', el+'-C'), 1))
+    moves.append((Hand(els[0]+'-C', None), -1))
+    moves.append((Hand(els[0]+'-C', None), -1))
+    moves.append((Hand(els[0]+'-C', None), -1))
+moves.append((Hand(els[0]+'-C', els[0]+'-G'), 1))
+moves.append((Hand(els[0]+'-C', els[0]+'-G'), 1))
+moves.append((Hand(els[0]+'-G', None), -1))
+for el in els[1:]:
+    moves.append((Hand(els[0]+'-G', None), -1))
+    moves.append((Hand(els[0]+'-G', el+'-G'), 1))
+moves.append((Hand(els[0]+'-G', None), 1))
+moves.append((Hand(els[0]+'-C', els[0]+'-G'), -1))
+moves.append((Hand(els[0]+'-C', els[0]+'-G'), -1))
+moves.append((Hand(els[0]+'-G', None), 1))
+for el in els[1:]:
+    moves.append((Hand(els[0]+'-G', el+'-G'), 1))
+    moves.append((Hand(els[0]+'-G', None), -1))
+moves.append((Hand(els[0]+'-G', None), -1))
+moves.append((Hand(els[0]+'-C', els[0]+'-G'), 1))
+moves.append((Hand(els[0]+'-C', els[0]+'-G'), 1))
+for el in els[1:]:
+    moves.append((Hand(els[0]+'-C', None), 1))
+    moves.append((Hand(els[0]+'-C', el+'-C'), -1))
+moves.append((Hand(els[0]+'-C', els[0]+'-G'), 1))
 
 
 print('Target:')
 print(floor_to_text(target))
 print('\n'+'*'*50)
-print('\n'*3)
-print('\x1b[3A', end='')
-print(floor_to_text(items, cur_floor=cur_floor), end='')
+print('\n'*4)
+print('\x1b[4A', end='')
+print(floor_to_text(items, cur_floor=cur_floor))
 for move in moves:
     time.sleep(0.1)
     hand, count = move
@@ -163,11 +169,13 @@ for move in moves:
 
     if hand.right:
         items[hand.right] += count
-    print('\x1b[3A', end='\r')
-    print(floor_to_text(items, cur_floor=cur_floor), end='\r')
+    print('\r\x1b[4A', end='\r')
+    #print('*'*50)
+    print(floor_to_text(items, cur_floor=cur_floor))
     if fried(items):
         print('\nFried!')
         break
     if items == target:
-        print('\nWon in {} steps!'.format(len(moves)))
-        
+        print('\nWon in {} steps!'.format(len(moves-1)))
+    
+print('\nWon in {} steps!'.format(len(moves)-1))
