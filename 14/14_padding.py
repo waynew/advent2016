@@ -10,12 +10,11 @@ def hashify(index, salt='abc{}'):
     
 
 def triplets(curse):
-    triples = set()
     for i in range(len(curse)-3):
         substr = curse[i:i+3]
         if substr.count(substr[0]) == len(substr):
-            triples.add(substr)
-    return triples
+            return substr
+    return None
 
 
 def has_quint(char, curse):
@@ -26,8 +25,8 @@ def has_quint(char, curse):
 
 
 def get_key(curse):
-    triples = triplets(curse)
-    for triplet in triples:
+    triplet = triplets(curse)
+    if triplet:
         for n in range(index, index+1000):
             if has_quint(triplet[0], hashify(n, salt=salt)):
                 return (index, n, curse, hashify(n))
